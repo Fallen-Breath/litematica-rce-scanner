@@ -36,10 +36,10 @@ litematica-rce-scanner [options] [path ...]
 -version                 输出版本号并退出
 ```
 
-使用 `-progress=false` 可关闭进度输出。  
-使用 `-non-recursive` 可限制扫描范围，仅处理每个目标目录下的直接文件。若位置参数为文件路径，则直接扫描该文件。  
-使用 `-jar-only` 可跳过文件名不包含 `.jar` 的文件；例如 `mod.jar.disabled` 仍会被扫描。
-使用 `-warnings` 可输出诸如权限不足等逐文件的警告信息。未启用时，警告不会逐条显示，但仍会计入最终统计。
+使用 `-progress=false` 可关闭进度输出。
+使用 `-non-recursive` 可限制扫描范围，仅处理每个目标目录下的直接文件。若位置参数为文件路径，则直接扫描该文件。
+使用 `-jar-only` 可仅扫描文件名包含 `.jar` 的文件；例如 `mod.jar.disabled` 仍会被扫描。
+使用 `-warnings` 可输出诸如权限不足等逐文件的警告信息。
 
 示例：
 
@@ -57,17 +57,13 @@ litematica-rce-scanner [options] [path ...]
 
 ## 输出说明
 
-命令行输出内容为英文。在交互式终端中默认启用 ANSI 颜色。Windows 下会自动处理控制台颜色兼容；若输出目标不是交互式终端，`-color=auto` 会退回无色输出。
-
-启动时，扫描器会输出扫描 root 的数量与并发度。开始遍历每个 root 之前，也会输出当前正在扫描的 root 路径。
+命令行输出内容为英文。支持时会自动启用颜色。
 
 扫描期间，程序会每隔 5 秒向 stdout 输出一次进度，首次进度显示大约在扫描启动 5 秒后出现。扫描完成后，还会再输出一次最终进度信息：
 
 ```text
 Progress: scanned 123 files, elapsed 12.3s, vulnerable 7
 ```
-
-扫描器不会预先遍历整棵目录树，也不会将所有路径加载至内存中；而是边遍历边扫描，并使用一个大小受限的任务队列，资源占用极少。
 
 检测到的 Litematica 和 Servux jar 文件会在扫描过程中实时输出。其中，存在漏洞的 jar 标记为 `[VULNERABLE]`，而命中目标 class 但不满足漏洞构造函数规则的 jar 标记为 `[SAFE]`。
 
@@ -76,7 +72,7 @@ Progress: scanned 123 files, elapsed 12.3s, vulnerable 7
 [SAFE]        path/to/file.jar   servux
 ```
 
-`version` 字段会优先从 `fabric.mod.json` 中读取。若 manifest 或版本信息读取失败，则该字段会被省略。
+能够读取到 mod 版本时会一并显示；读取不到时会省略。
 
 如果发现存在漏洞的 jar，最终 summary 会提示尽快更新受影响的 mod，并输出 Litematica 与 Servux 的 Modrinth 版本页面。
 
@@ -90,23 +86,18 @@ CSV 中仅记录检测到的 Litematica 或 Servux jar 文件。
 
 ## 检测原理
 
-扫描器会遍历指定路径下的普通文件。默认会递归扫描所有子目录；若使用 `-non-recursive` 参数，则仅扫描每个目标目录下的直接文件。扫描过程不依赖文件扩展名。
+扫描器会检查指定路径下的普通文件。默认会递归扫描所有子目录；若使用 `-non-recursive` 参数，则仅扫描每个目标目录下的直接文件。
 
-仅当文件是合法的 ZIP/JAR 压缩包，且其 ZIP 中央目录中包含以下任一精确 class 路径时，才会被列为候选 jar 并进入后续检查：
+仅当文件是合法的 JAR/ZIP 压缩包，且包含以下任一精确 class 路径时，才会进入后续检查：
 
 - `fi/dy/masa/litematica/schematic/transmit/SchematicBuffer.class`
 - `fi/dy/masa/servux/schematic/transmit/SchematicBuffer.class`
 
-扫描器会首先检查 ZIP 文件的最小大小和 local file header 标记，随后通过 Go 标准库的 `archive/zip` 读取 ZIP 结束记录和中央目录，不会解压整个压缩包。一旦命中目标，则只会解压出对应的 `SchematicBuffer.class` 文件。
+除非使用 `-jar-only`，否则扫描过程不依赖文件扩展名。命中目标的压缩包会被检查，但不会整体解压。
 
-若目标 `SchematicBuffer.class` 中所有构造函数的首个参数均为 `java.lang.String`，则判定该 jar 存在漏洞。class 解析器会直接检查方法表，判定逻辑如下：
+若目标 `SchematicBuffer.class` 中所有构造函数的首个参数均为 `java.lang.String`，则判定该 jar 存在漏洞。
 
-- 方法名必须为 `<init>`
-- 方法 descriptor 中必须存在首个参数
-- 首个参数必须为 `Ljava/lang/String;`
-- 仅当所有构造函数均满足上述规则时，该 jar 才会被报告为存在漏洞
-
-若目标 class 无法读取或解析，则该文件会被计入错误数量，但不会报告为存在漏洞。启用 `-warnings` 后可输出逐文件的详细错误信息。
+若目标 class 无法检查，则该文件会被计入错误数量，但不会报告为存在漏洞。启用 `-warnings` 后可输出逐文件的详细错误信息。
 
 ## Docker 支持
 

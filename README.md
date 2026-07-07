@@ -36,10 +36,10 @@ Common options:
 -version                  print version information and exit
 ```
 
-Set `-progress=false` to suppress progress output.  
-Set `-non-recursive` to restrict scanning to files directly inside each specified directory. If a positional argument is a file path, it will be scanned directly.  
-Set `-jar-only` to skip files whose name does not contain `.jar`; names such as `mod.jar.disabled` are still scanned.
-Set `-warnings` to enable per-file warnings such as permission-denied errors. When this flag is omitted, warnings are still aggregated in the final summary but not printed individually.
+Set `-progress=false` to suppress progress output.
+Set `-non-recursive` to scan only files directly inside each specified directory. File paths passed as arguments are scanned directly.
+Set `-jar-only` to scan only files whose name contains `.jar`; names such as `mod.jar.disabled` are still included.
+Set `-warnings` to show per-file warnings such as permission-denied errors.
 
 Examples:
 
@@ -57,17 +57,13 @@ On Windows, you can drag one or more folders onto the `.exe` file to launch it. 
 
 ## Output
 
-Terminal output is in English. ANSI color is enabled by default in interactive terminals. On Windows, the scanner handles console color compatibility automatically; if the output is not an interactive terminal, `-color=auto` falls back to plain output.
-
-At startup, the scanner prints the number of scan roots and the configured concurrency. Before each root is traversed, it also prints the root path being scanned.
+Terminal output is in English. Color is enabled automatically when supported.
 
 During scanning, progress is printed to stdout every 5 seconds, with the first update appearing approximately 5 seconds after startup. A final progress line is shown after scanning completes:
 
 ```text
 Progress: scanned 123 files, elapsed 12.3s, vulnerable 7
 ```
-
-The scanner does not pre-traverse the entire directory tree or keep all paths in memory; instead, it walks and scans concurrently using a small bounded work queue, keeping resource usage low.
 
 Detected Litematica and Servux jars are reported in real time as they are scanned. Vulnerable jars are marked `[VULNERABLE]`, while jars that match the target class but do not satisfy the vulnerable constructor rule are marked `[SAFE]`.
 
@@ -76,7 +72,7 @@ Detected Litematica and Servux jars are reported in real time as they are scanne
 [SAFE]        path/to/file.jar   servux
 ```
 
-The `version` field is extracted from `fabric.mod.json` when available. If the manifest or version information cannot be read, the field is omitted.
+The mod version is shown when available. If it cannot be read, it is omitted.
 
 If vulnerable jars are found, the final summary asks you to update the affected mods as soon as possible and prints Modrinth version pages for Litematica and Servux.
 
@@ -90,23 +86,18 @@ Only detected Litematica or Servux jars are written to the CSV.
 
 ## Detection Details
 
-The scanner walks through regular files under the specified paths. Directory scanning is recursive by default; using `-non-recursive` limits it to immediate files within each target directory. The scan does not depend on file extensions.
+The scanner checks regular files under the specified paths. Directory scanning is recursive by default; using `-non-recursive` limits it to immediate files within each target directory.
 
-A file is considered a candidate only if it is a valid ZIP/JAR archive and its ZIP central directory contains exactly one of the following class entries:
+A file is considered relevant only if it is a valid JAR/ZIP archive containing one of these class entries:
 
 - `fi/dy/masa/litematica/schematic/transmit/SchematicBuffer.class`
 - `fi/dy/masa/servux/schematic/transmit/SchematicBuffer.class`
 
-The scanner first verifies the minimum ZIP size and the local file header magic, then reads the ZIP end record and central directory using Go's `archive/zip` package. It does not decompress entire archives. For matching jars, only the target `SchematicBuffer.class` file is extracted.
+The scanner does not rely on file extensions unless `-jar-only` is used. Matching archives are checked without extracting the whole file.
 
-A jar is reported as vulnerable if every constructor in the target `SchematicBuffer.class` has `java.lang.String` as its first parameter. The class parser inspects the method table directly using these rules:
+A jar is reported as vulnerable when every constructor in the target `SchematicBuffer.class` has `java.lang.String` as its first parameter.
 
-- method name must be `<init>`
-- the method descriptor must include a first parameter
-- that first parameter must be `Ljava/lang/String;`
-- only when all constructors satisfy these conditions is the jar marked as vulnerable
-
-If the target class cannot be read or parsed, it is counted as an error rather than being reported as vulnerable. Use `-warnings` to print detailed per-file error information.
+If the target class cannot be checked, it is counted as an error rather than being reported as vulnerable. Use `-warnings` to show detailed per-file error information.
 
 ## Docker
 
