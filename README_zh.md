@@ -95,4 +95,4 @@ docker run --rm -t -v "$PWD:/scan:ro" fallenbreath/litematica-rce-scanner:latest
 docker run --rm -t -v "$PWD:/scan:ro" ghcr.io/fallen-breath/litematica-rce-scanner:latest
 ```
 
-镜像使用 distroless 运行时，并默认以 root 身份运行，方便扫描宿主机挂载进容器后权限较严格的本地文件。
+镜像默认以 root 身份运行，方便扫描宿主机挂载进容器后权限较严格的本地文件。

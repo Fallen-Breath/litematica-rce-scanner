@@ -95,4 +95,4 @@ docker run --rm -t -v "$PWD:/scan:ro" fallenbreath/litematica-rce-scanner:latest
 docker run --rm -t -v "$PWD:/scan:ro" ghcr.io/fallen-breath/litematica-rce-scanner:latest
 ```
 
-The image uses a distroless runtime and runs as root by default, which makes it practical for scanning mounted local files with restrictive ownership or mode bits.
+The image runs as root by default, which makes it practical for scanning mounted local files with restrictive ownership or mode bits.
