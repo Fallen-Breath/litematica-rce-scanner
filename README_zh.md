@@ -1,5 +1,9 @@
 # litematica-rce-scanner
 
+[![License](https://img.shields.io/github/license/Fallen-Breath/litematica-rce-scanner.svg)](http://www.gnu.org/licenses/gpl-3.0.html)
+[![Issues](https://img.shields.io/github/issues/Fallen-Breath/litematica-rce-scanner.svg)](https://github.com/Fallen-Breath/litematica-rce-scanner/issues)
+[![Docker](https://img.shields.io/docker/v/fallenbreath/litematica-rce-scanner/latest?label=DockerHub)](https://hub.docker.com/r/fallenbreath/litematica-rce-scanner)
+
 [English](README.md) | 中文
 
 一个用于检测存在风险的 [Litematica](https://github.com/sakura-ryoko/litematica) 与 [Servux](https://github.com/sakura-ryoko/servux) jar 文件的小型命令行扫描器。
