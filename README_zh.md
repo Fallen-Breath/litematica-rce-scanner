@@ -2,7 +2,7 @@
 
 [English](README.md) | 中文
 
-一个用于检测存在风险的 Litematica 与 Servux jar 文件的小型命令行扫描器。
+一个用于检测存在风险的 [Litematica](https://github.com/sakura-ryoko/litematica) 与 [Servux](https://github.com/sakura-ryoko/servux) jar 文件的小型命令行扫描器。
 
 它可以扫描一个或多个路径，报告检测到的 Litematica/Servux jar，并标记存在漏洞的版本，方便删除或升级。
 

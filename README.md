@@ -2,7 +2,7 @@
 
 English | [中文](README_zh.md)
 
-A small command-line scanner for detecting vulnerable Litematica and Servux jar files.
+A small command-line scanner for detecting vulnerable [Litematica](https://github.com/sakura-ryoko/litematica) and [Servux](https://github.com/sakura-ryoko/servux) jar files.
 
 It scans one or more paths, reports detected Litematica/Servux jars, and marks vulnerable versions so they can be removed or upgraded.
 

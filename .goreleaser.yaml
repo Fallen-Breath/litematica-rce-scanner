@@ -1,57 +1,45 @@
+# This is an example .goreleaser.yml file with some sensible defaults.
+# Make sure to check the documentation at https://goreleaser.com
+
+# The lines below are called `modelines`. See `:help modeline`
+# Feel free to remove those if you don't want/need to use them.
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+# vim: set ts=2 sw=2 tw=0 fo=cnqoj
+
 version: 2
 
-project_name: litematica-rce-scanner
-
-before:
-  hooks:
-    - go mod tidy
-
 builds:
-  - id: litematica-rce-scanner
-    main: ./cmd/litematica-rce-scanner
+  - main: ./cmd/litematica-rce-scanner
     binary: litematica-rce-scanner
     env:
       - CGO_ENABLED=0
-    ldflags:
-      - -s -w
     goos:
       - linux
-      - darwin
       - windows
+      - darwin
     goarch:
-      - amd64
       - arm64
-      - arm
-    goarm:
-      - "7"
-    ignore:
-      - goos: darwin
-        goarch: arm
-      - goos: windows
-        goarch: arm
+      - amd64
+      - "386"
 
 archives:
-  - id: default
-    ids:
-      - litematica-rce-scanner
+  - formats: [tar.gz]
+    # this name template makes the OS and Arch compatible with the results of `uname`.
     name_template: >-
-      {{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}
-    formats:
-      - tar.gz
+      {{ .ProjectName }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
+    # use zip for windows archives
     format_overrides:
       - goos: windows
-        formats:
-          - zip
+        formats: [zip]
     files:
       - LICENSE
       - README.md
       - README_zh.md
-
-checksum:
-  name_template: checksums.txt
-
-snapshot:
-  version_template: "{{ incpatch .Version }}-next"
 
 changelog:
   sort: asc
