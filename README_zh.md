@@ -29,12 +29,14 @@ litematica-rce-scanner [options] [path ...]
 -progress                是否向 stdout 定期输出进度信息，默认为 true
 -warnings                是否输出逐文件扫描失败时的警告信息，默认为 false
 -non-recursive           仅扫描每个目录下的直接文件，不递归进入子目录
+-jar-only                仅扫描文件名包含 .jar 的文件
 -fail-on-vulnerable      若发现存在漏洞的 jar 文件，则以退出码 1 退出
 -version                 输出版本号并退出
 ```
 
 使用 `-progress=false` 可关闭进度输出。  
 使用 `-non-recursive` 可限制扫描范围，仅处理每个目标目录下的直接文件。若位置参数为文件路径，则直接扫描该文件。  
+使用 `-jar-only` 可跳过文件名不包含 `.jar` 的文件；例如 `mod.jar.disabled` 仍会被扫描。
 使用 `-warnings` 可输出诸如权限不足等逐文件的警告信息。未启用时，警告不会逐条显示，但仍会计入最终统计。
 
 示例：
@@ -43,6 +45,7 @@ litematica-rce-scanner [options] [path ...]
 ./litematica-rce-scanner
 ./litematica-rce-scanner -j 8 /path/to/mods /another/path
 ./litematica-rce-scanner -non-recursive ./mods
+./litematica-rce-scanner -jar-only ./mods
 ./litematica-rce-scanner ./mods/litematica.jar
 ./litematica-rce-scanner -warnings /
 ./litematica-rce-scanner -csv results.csv -fail-on-vulnerable ./mods

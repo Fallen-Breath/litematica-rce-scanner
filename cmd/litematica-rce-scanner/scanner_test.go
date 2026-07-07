@@ -174,12 +174,70 @@ func TestWalkRootNonRecursiveSkipsNestedFiles(t *testing.T) {
 	}
 }
 
+func TestWalkRootJarOnlyFiltersByName(t *testing.T) {
+	dir := t.TempDir()
+	jarDisabled := filepath.Join(dir, "mod.jar.disabled")
+	upperJarDisabled := filepath.Join(dir, "MOD.JAR.disabled")
+	zipFile := filepath.Join(dir, "mod.zip")
+	if err := os.WriteFile(jarDisabled, []byte("jar"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(upperJarDisabled, []byte("jar"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(zipFile, []byte("zip"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	jobs := make(chan string, 2)
+	var c counters
+	walkRoot(dir, jobs, &c, options{jarOnly: true})
+	close(jobs)
+
+	if got := collectJobs(jobs); !samePathSet(got, []string{jarDisabled, upperJarDisabled}) {
+		t.Fatalf("walked jobs = %v, want [%s %s]", got, jarDisabled, upperJarDisabled)
+	}
+}
+
+func TestWalkRootJarOnlyAppliesToFileRoot(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "mod.zip")
+	if err := os.WriteFile(path, []byte("zip"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	jobs := make(chan string, 1)
+	var c counters
+	walkRoot(path, jobs, &c, options{jarOnly: true})
+	close(jobs)
+
+	if got := collectJobs(jobs); len(got) != 0 {
+		t.Fatalf("walked jobs = %v, want none", got)
+	}
+}
+
 func collectJobs(jobs <-chan string) []string {
 	var paths []string
 	for path := range jobs {
 		paths = append(paths, path)
 	}
 	return paths
+}
+
+func samePathSet(got []string, want []string) bool {
+	if len(got) != len(want) {
+		return false
+	}
+	seen := make(map[string]int, len(want))
+	for _, path := range want {
+		seen[path]++
+	}
+	for _, path := range got {
+		if seen[path] == 0 {
+			return false
+		}
+		seen[path]--
+	}
+	return true
 }
 
 func testJar(t *testing.T, entries map[string][]byte) string {

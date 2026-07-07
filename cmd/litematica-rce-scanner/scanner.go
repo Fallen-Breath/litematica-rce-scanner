@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -120,7 +121,7 @@ func walkRoot(root string, jobs chan<- string, c *counters, opts options) {
 			printWarning(opts, "cannot read %q: %v", path, walkErr)
 			return nil
 		}
-		enqueueDirEntry(path, entry, jobs)
+		enqueueDirEntry(path, entry, jobs, opts)
 		return nil
 	})
 	if err != nil {
@@ -136,7 +137,7 @@ func walkRootNonRecursive(root string, jobs chan<- string, c *counters, opts opt
 		printWarning(opts, "cannot access %q: %v", root, err)
 		return
 	}
-	if info.Mode().IsRegular() {
+	if info.Mode().IsRegular() && shouldScanPath(root, opts) {
 		jobs <- root
 		return
 	}
@@ -151,18 +152,25 @@ func walkRootNonRecursive(root string, jobs chan<- string, c *counters, opts opt
 		return
 	}
 	for _, entry := range entries {
-		enqueueDirEntry(filepath.Join(root, entry.Name()), entry, jobs)
+		enqueueDirEntry(filepath.Join(root, entry.Name()), entry, jobs, opts)
 	}
 }
 
-func enqueueDirEntry(path string, entry os.DirEntry, jobs chan<- string) {
+func enqueueDirEntry(path string, entry os.DirEntry, jobs chan<- string, opts options) {
 	if entry.IsDir() {
 		return
 	}
 	if entry.Type()&os.ModeType != 0 {
 		return
 	}
+	if !shouldScanPath(path, opts) {
+		return
+	}
 	jobs <- path
+}
+
+func shouldScanPath(path string, opts options) bool {
+	return !opts.jarOnly || strings.Contains(strings.ToLower(filepath.Base(path)), ".jar")
 }
 
 func scanOne(path string, c *counters, opts options, results chan<- scanResult) {

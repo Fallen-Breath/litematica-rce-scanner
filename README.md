@@ -29,12 +29,14 @@ Common options:
 -progress                 print periodic progress to stdout (default true)
 -warnings                 print per-file warnings for scan failures (default false)
 -non-recursive            scan only immediate files under each directory, do not recurse into subdirectories
+-jar-only                 scan only files whose name contains .jar
 -fail-on-vulnerable       exit with code 1 if any vulnerable jar is found
 -version                  print version information and exit
 ```
 
 Set `-progress=false` to suppress progress output.  
 Set `-non-recursive` to restrict scanning to files directly inside each specified directory. If a positional argument is a file path, it will be scanned directly.  
+Set `-jar-only` to skip files whose name does not contain `.jar`; names such as `mod.jar.disabled` are still scanned.
 Set `-warnings` to enable per-file warnings such as permission-denied errors. When this flag is omitted, warnings are still aggregated in the final summary but not printed individually.
 
 Examples:
@@ -43,6 +45,7 @@ Examples:
 ./litematica-rce-scanner
 ./litematica-rce-scanner -j 8 /path/to/mods /another/path
 ./litematica-rce-scanner -non-recursive ./mods
+./litematica-rce-scanner -jar-only ./mods
 ./litematica-rce-scanner ./mods/litematica.jar
 ./litematica-rce-scanner -warnings /
 ./litematica-rce-scanner -csv results.csv -fail-on-vulnerable ./mods

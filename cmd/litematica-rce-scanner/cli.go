@@ -18,6 +18,7 @@ type options struct {
 	progress         bool
 	warnings         bool
 	nonRecursive     bool
+	jarOnly          bool
 	pause            bool
 	noPause          bool
 	failOnVulnerable bool
@@ -69,6 +70,7 @@ func parseOptions(args []string) (options, []string, error) {
 	fs.BoolVar(&opts.progress, "progress", opts.progress, "print periodic progress to stdout")
 	fs.BoolVar(&opts.warnings, "warnings", false, "print per-file warnings for scan failures")
 	fs.BoolVar(&opts.nonRecursive, "non-recursive", false, "scan only immediate files under each directory, do not recurse into subdirectories")
+	fs.BoolVar(&opts.jarOnly, "jar-only", false, "scan only files whose name contains .jar")
 	fs.BoolVar(&opts.pause, "pause", false, "wait for Enter before exiting")
 	fs.BoolVar(&opts.noPause, "no-pause", false, "disable automatic Windows pause")
 	fs.BoolVar(&opts.failOnVulnerable, "fail-on-vulnerable", false, "exit with code 1 if any vulnerable jar is found")
