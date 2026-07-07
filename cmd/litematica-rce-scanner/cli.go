@@ -32,7 +32,7 @@ func run(args []string) (int, bool) {
 		if errors.Is(err, flag.ErrHelp) {
 			return 0, pause
 		}
-		fmt.Fprintf(os.Stdout, "Error: %v\n", err)
+		fmt.Fprintf(stdout, "Error: %v\n", err)
 		return 2, pause
 	}
 	opts.colorEnabled = shouldUseColor(opts.colorMode, os.Stdout)
@@ -44,7 +44,7 @@ func run(args []string) (int, bool) {
 	printShortBanner()
 	summary, err := scanRoots(roots, opts)
 	if err != nil {
-		fmt.Fprintf(os.Stdout, "Error: %v\n", err)
+		fmt.Fprintf(stdout, "Error: %v\n", err)
 		return 2, pause
 	}
 
@@ -63,7 +63,7 @@ func parseOptions(args []string) (options, []string, error) {
 	}
 
 	fs := flag.NewFlagSet("litematica-rce-scanner", flag.ContinueOnError)
-	fs.SetOutput(os.Stdout)
+	fs.SetOutput(stdout)
 	fs.IntVar(&opts.concurrency, "j", opts.concurrency, "number of files to scan concurrently")
 	fs.IntVar(&opts.concurrency, "concurrency", opts.concurrency, "number of files to scan concurrently")
 	fs.StringVar(&opts.csvPath, "csv", "", "write detected Litematica/Servux jar results to a CSV file")
@@ -136,6 +136,6 @@ func isCharacterDevice(file *os.File) bool {
 }
 
 func waitForEnter() {
-	fmt.Fprint(os.Stdout, "Press Enter to exit...")
+	fmt.Fprint(stdout, "Press Enter to exit...")
 	_, _ = bufio.NewReader(os.Stdin).ReadString('\n')
 }

@@ -3,15 +3,22 @@ package main
 import (
 	"encoding/csv"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/mattn/go-colorable"
+	"github.com/mattn/go-isatty"
 )
 
 const progressInterval = 5 * time.Second
 
-var outputMu sync.Mutex
+var (
+	outputMu sync.Mutex
+	stdout   io.Writer = colorable.NewColorableStdout()
+)
 
 type colorizer struct {
 	enabled bool
@@ -123,23 +130,23 @@ func printSummary(summary scanSummary, colors colorizer) {
 	outputMu.Lock()
 	defer outputMu.Unlock()
 
-	fmt.Fprintln(os.Stdout)
-	fmt.Fprintln(os.Stdout, "Summary:")
-	fmt.Fprintf(os.Stdout, "  Files scanned: %d\n", summary.Scanned)
-	fmt.Fprintf(os.Stdout, "  Valid zip/jar files: %d\n", summary.ValidZips)
-	fmt.Fprintf(os.Stdout, "  Jars with target class: %d\n", summary.TargetJars)
-	fmt.Fprintf(os.Stdout, "  Target classes inspected: %d\n", summary.TargetClasses)
-	fmt.Fprintf(os.Stdout, "  Safe jars: %s\n", coloredCount(summary.SafeJars, colors.green))
-	fmt.Fprintf(os.Stdout, "  Vulnerable jars: %s\n", coloredCount(summary.VulnerableJars, colors.red))
-	fmt.Fprintf(os.Stdout, "  Errors: %d\n", summary.Errors)
+	fmt.Fprintln(stdout)
+	fmt.Fprintln(stdout, "Summary:")
+	fmt.Fprintf(stdout, "  Files scanned: %d\n", summary.Scanned)
+	fmt.Fprintf(stdout, "  Valid zip/jar files: %d\n", summary.ValidZips)
+	fmt.Fprintf(stdout, "  Jars with target class: %d\n", summary.TargetJars)
+	fmt.Fprintf(stdout, "  Target classes inspected: %d\n", summary.TargetClasses)
+	fmt.Fprintf(stdout, "  Safe jars: %s\n", coloredCount(summary.SafeJars, colors.green))
+	fmt.Fprintf(stdout, "  Vulnerable jars: %s\n", coloredCount(summary.VulnerableJars, colors.red))
+	fmt.Fprintf(stdout, "  Errors: %d\n", summary.Errors)
 	if summary.VulnerableJars == 0 {
-		fmt.Fprintln(os.Stdout, colors.green("No vulnerable jars found."))
+		fmt.Fprintln(stdout, colors.green("No vulnerable jars found."))
 	} else {
-		fmt.Fprintln(os.Stdout, colors.red("Vulnerable jars were found."))
-		fmt.Fprintln(os.Stdout, "")
-		fmt.Fprintln(os.Stdout, "Please update the affected mods as soon as possible to avoid being impacted.")
-		fmt.Fprintf(os.Stdout, "  Litematica: %s\n", colors.link("https://modrinth.com/mod/litematica/versions"))
-		fmt.Fprintf(os.Stdout, "  Servux: %s\n", colors.link("https://modrinth.com/mod/servux/versions"))
+		fmt.Fprintln(stdout, colors.red("Vulnerable jars were found."))
+		fmt.Fprintln(stdout, "")
+		fmt.Fprintln(stdout, "Please update the affected mods as soon as possible to avoid being impacted.")
+		fmt.Fprintf(stdout, "  Litematica: %s\n", colors.link("https://modrinth.com/mod/litematica/versions"))
+		fmt.Fprintf(stdout, "  Servux: %s\n", colors.link("https://modrinth.com/mod/servux/versions"))
 	}
 }
 
@@ -154,13 +161,13 @@ func coloredCount(value uint64, paint func(string) string) string {
 func printLine(line string) {
 	outputMu.Lock()
 	defer outputMu.Unlock()
-	fmt.Fprintln(os.Stdout, line)
+	fmt.Fprintln(stdout, line)
 }
 
 func printf(format string, args ...any) {
 	outputMu.Lock()
 	defer outputMu.Unlock()
-	fmt.Fprintf(os.Stdout, format, args...)
+	fmt.Fprintf(stdout, format, args...)
 }
 
 func shouldUseColor(mode string, file *os.File) bool {
@@ -170,7 +177,7 @@ func shouldUseColor(mode string, file *os.File) bool {
 	case "never":
 		return false
 	default:
-		return isCharacterDevice(file)
+		return isatty.IsTerminal(file.Fd()) || isatty.IsCygwinTerminal(file.Fd())
 	}
 }
 

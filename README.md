@@ -57,7 +57,7 @@ On Windows, you can drag one or more folders onto the `.exe` file to launch it. 
 
 ## Output
 
-Terminal output is in English. ANSI color is enabled by default in interactive terminals, including modern Windows terminals.
+Terminal output is in English. ANSI color is enabled by default in interactive terminals. On Windows, the scanner handles console color compatibility automatically; if the output is not an interactive terminal, `-color=auto` falls back to plain output.
 
 At startup, the scanner prints the number of scan roots and the configured concurrency. Before each root is traversed, it also prints the root path being scanned.
 
