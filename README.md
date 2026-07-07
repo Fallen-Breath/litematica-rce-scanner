@@ -69,10 +69,13 @@ Detected Litematica and Servux jars are reported in real time as they are scanne
 
 ```text
 [VULNERABLE]  path/to/file.jar   litematica v1.2.3
+[VULNERABLE]  path/to/dev.jar    litematica v1.2.3 (dev remap)
 [SAFE]        path/to/file.jar   servux
 ```
 
 The mod version is shown when available. If it cannot be read, it is omitted.
+
+A yellow `(dev remap)` marker means the jar looks like a Fabric development remap. It is usually less urgent than a normal runtime mod jar, but should still not be shipped or deployed by accident.
 
 If vulnerable jars are found, the final summary asks you to update the affected mods as soon as possible and prints Modrinth version pages for Litematica and Servux.
 

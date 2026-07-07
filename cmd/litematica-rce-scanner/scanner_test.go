@@ -32,22 +32,26 @@ func TestFirstParameterIsJavaLangString(t *testing.T) {
 
 func TestInspectGeneratedJars(t *testing.T) {
 	tests := []struct {
-		name       string
-		classPath  string
-		classBytes []byte
-		manifest   string
-		wantMod    string
-		wantVer    string
-		wantVuln   bool
+		name        string
+		classPath   string
+		classBytes  []byte
+		manifest    string
+		jarManifest string
+		wantMod     string
+		wantVer     string
+		wantDev     bool
+		wantVuln    bool
 	}{
 		{
-			name:       "vulnerable litematica",
-			classPath:  litematicaSchematicBuffer,
-			classBytes: testClassFile("(Ljava/lang/String;)V", "(Ljava/lang/String;I)V"),
-			manifest:   `{"id":"litematica","version":"1.2.3"}`,
-			wantMod:    "litematica",
-			wantVer:    "1.2.3",
-			wantVuln:   true,
+			name:        "vulnerable litematica dev remap",
+			classPath:   litematicaSchematicBuffer,
+			classBytes:  testClassFile("(Ljava/lang/String;)V", "(Ljava/lang/String;I)V"),
+			manifest:    `{"id":"litematica","version":"1.2.3"}`,
+			jarManifest: "Manifest-Version: 1.0\r\nFabric-Mapping-Namespace: named\r\n",
+			wantMod:     "litematica",
+			wantVer:     "1.2.3",
+			wantDev:     true,
+			wantVuln:    true,
 		},
 		{
 			name:       "safe servux",
@@ -56,6 +60,7 @@ func TestInspectGeneratedJars(t *testing.T) {
 			manifest:   `{"id":"servux","version":"4.5.6"}`,
 			wantMod:    "servux",
 			wantVer:    "4.5.6",
+			wantDev:    false,
 			wantVuln:   false,
 		},
 	}
@@ -65,6 +70,7 @@ func TestInspectGeneratedJars(t *testing.T) {
 			jar := testJar(t, map[string][]byte{
 				tt.classPath:    tt.classBytes,
 				fabricModJSON:   []byte(tt.manifest),
+				jarManifestMF:   []byte(tt.jarManifest),
 				"unrelated.txt": []byte("ignored"),
 			})
 
@@ -83,11 +89,18 @@ func TestInspectGeneratedJars(t *testing.T) {
 			if finding.Error != "" {
 				t.Fatalf("finding error: %s", finding.Error)
 			}
-			if finding.Mod != tt.wantMod || finding.Version != tt.wantVer || finding.Vulnerable != tt.wantVuln {
-				t.Fatalf("finding = {mod:%q version:%q vulnerable:%v}, want {mod:%q version:%q vulnerable:%v}",
-					finding.Mod, finding.Version, finding.Vulnerable, tt.wantMod, tt.wantVer, tt.wantVuln)
+			if finding.Mod != tt.wantMod || finding.Version != tt.wantVer || finding.DevRemap != tt.wantDev || finding.Vulnerable != tt.wantVuln {
+				t.Fatalf("finding = {mod:%q version:%q dev:%v vulnerable:%v}, want {mod:%q version:%q dev:%v vulnerable:%v}",
+					finding.Mod, finding.Version, finding.DevRemap, finding.Vulnerable, tt.wantMod, tt.wantVer, tt.wantDev, tt.wantVuln)
 			}
 		})
+	}
+}
+
+func TestManifestHeaderValue(t *testing.T) {
+	manifest := "Manifest-Version: 1.0\nFabric-Mapping-Namespace: na\n med\n"
+	if got := manifestHeaderValue(manifest, "Fabric-Mapping-Namespace"); got != "named" {
+		t.Fatalf("manifestHeaderValue() = %q, want named", got)
 	}
 }
 

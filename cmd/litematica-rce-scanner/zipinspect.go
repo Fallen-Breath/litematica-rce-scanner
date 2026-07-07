@@ -13,8 +13,10 @@ const (
 	litematicaSchematicBuffer = "fi/dy/masa/litematica/schematic/transmit/SchematicBuffer.class"
 	servuxSchematicBuffer     = "fi/dy/masa/servux/schematic/transmit/SchematicBuffer.class"
 	fabricModJSON             = "fabric.mod.json"
+	jarManifestMF             = "META-INF/MANIFEST.MF"
 	maxClassFileSize          = 64 << 20
 	maxFabricModJSONSize      = 1 << 20
+	maxJarManifestSize        = 1 << 20
 )
 
 func inspectZip(path string) ([]scanResult, bool, error) {
@@ -42,10 +44,14 @@ func inspectZip(path string) ([]scanResult, bool, error) {
 	}
 
 	var targets []*zip.File
-	var manifest *zip.File
+	var modManifest *zip.File
+	var jarManifest *zip.File
 	for _, entry := range reader.File {
 		if entry.Name == fabricModJSON {
-			manifest = entry
+			modManifest = entry
+		}
+		if entry.Name == jarManifestMF {
+			jarManifest = entry
 		}
 		if _, ok := targetMod(entry.Name); ok {
 			targets = append(targets, entry)
@@ -56,13 +62,17 @@ func inspectZip(path string) ([]scanResult, bool, error) {
 	}
 
 	modVersion := ""
-	if manifest != nil {
-		modVersion, _ = readFabricModVersion(manifest)
+	if modManifest != nil {
+		modVersion, _ = readFabricModVersion(modManifest)
+	}
+	devRemap := false
+	if jarManifest != nil {
+		devRemap, _ = hasFabricNamedMappingNamespace(jarManifest)
 	}
 
 	findings := make([]scanResult, 0, len(targets))
 	for _, entry := range targets {
-		findings = append(findings, inspectClassEntry(path, entry, modVersion))
+		findings = append(findings, inspectClassEntry(path, entry, modVersion, devRemap))
 	}
 	return findings, true, nil
 }
@@ -75,12 +85,13 @@ func hasZipLocalFileHeader(file *os.File) bool {
 	return header == [4]byte{'P', 'K', 0x03, 0x04}
 }
 
-func inspectClassEntry(path string, entry *zip.File, modVersion string) scanResult {
+func inspectClassEntry(path string, entry *zip.File, modVersion string, devRemap bool) scanResult {
 	mod, _ := targetMod(entry.Name)
 	result := scanResult{
-		Path:    path,
-		Mod:     mod,
-		Version: modVersion,
+		Path:     path,
+		Mod:      mod,
+		Version:  modVersion,
+		DevRemap: devRemap,
 	}
 
 	data, err := readZipEntry(entry, maxClassFileSize)
@@ -119,6 +130,51 @@ func readFabricModVersion(entry *zip.File) (string, error) {
 		return "", nil
 	}
 	return strings.TrimSpace(modVersion), nil
+}
+
+func hasFabricNamedMappingNamespace(entry *zip.File) (bool, error) {
+	data, err := readZipEntry(entry, maxJarManifestSize)
+	if err != nil {
+		return false, err
+	}
+	namespace := manifestHeaderValue(string(data), "Fabric-Mapping-Namespace")
+	return strings.EqualFold(strings.TrimSpace(namespace), "named"), nil
+}
+
+func manifestHeaderValue(data string, name string) string {
+	data = strings.ReplaceAll(data, "\r\n", "\n")
+	data = strings.ReplaceAll(data, "\r", "\n")
+
+	currentName := ""
+	currentValue := ""
+	commit := func() string {
+		if strings.EqualFold(currentName, name) {
+			return strings.TrimSpace(currentValue)
+		}
+		return ""
+	}
+
+	for _, line := range strings.Split(data, "\n") {
+		if strings.HasPrefix(line, " ") && currentName != "" {
+			currentValue += line[1:]
+			continue
+		}
+		if value := commit(); value != "" {
+			return value
+		}
+		currentName = ""
+		currentValue = ""
+		if line == "" {
+			continue
+		}
+		headerName, headerValue, ok := strings.Cut(line, ":")
+		if !ok {
+			continue
+		}
+		currentName = headerName
+		currentValue = strings.TrimLeft(headerValue, " ")
+	}
+	return commit()
 }
 
 func readZipEntry(entry *zip.File, limit int64) ([]byte, error) {

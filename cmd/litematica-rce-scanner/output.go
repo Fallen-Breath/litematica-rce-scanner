@@ -112,6 +112,9 @@ func printResult(result scanResult, colors colorizer) {
 	if result.Version != "" {
 		line += " " + colors.cyan("v"+result.Version)
 	}
+	if result.DevRemap {
+		line += " " + colors.yellow("(dev remap)")
+	}
 	printLine(line)
 }
 
@@ -202,6 +205,10 @@ func (c colorizer) magenta(text string) string {
 
 func (c colorizer) green(text string) string {
 	return c.paint("32;1", text)
+}
+
+func (c colorizer) yellow(text string) string {
+	return c.paint("33;1", text)
 }
 
 func (c colorizer) link(text string) string {

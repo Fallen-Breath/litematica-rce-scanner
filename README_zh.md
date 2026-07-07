@@ -69,10 +69,13 @@ Progress: scanned 123 files, elapsed 12.3s, vulnerable 7
 
 ```text
 [VULNERABLE]  path/to/file.jar   litematica v1.2.3
+[VULNERABLE]  path/to/dev.jar    litematica v1.2.3 (dev remap)
 [SAFE]        path/to/file.jar   servux
 ```
 
 能够读取到 mod 版本时会一并显示；读取不到时会省略。
+
+黄色的 `(dev remap)` 标识表示该 jar 看起来像 Fabric 开发环境中的 remapped jar。它通常没有正常运行环境里的 mod jar 那么紧急，但仍建议确认不要误发布或部署。
 
 如果发现存在漏洞的 jar，最终 summary 会提示尽快更新受影响的 mod，并输出 Litematica 与 Servux 的 Modrinth 版本页面。
 

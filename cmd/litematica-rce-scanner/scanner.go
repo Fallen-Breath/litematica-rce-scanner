@@ -25,6 +25,7 @@ type scanResult struct {
 	Path       string
 	Mod        string
 	Version    string
+	DevRemap   bool
 	Vulnerable bool
 	Error      string
 }
