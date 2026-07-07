@@ -75,7 +75,7 @@ A file is treated as a candidate only when it is a valid ZIP/JAR and the ZIP cen
 - `fi/dy/masa/litematica/schematic/transmit/SchematicBuffer.class`
 - `fi/dy/masa/servux/schematic/transmit/SchematicBuffer.class`
 
-The scanner reads the ZIP end record and central directory through Go's `archive/zip` reader. It does not decompress whole archives. For matching jars, it decompresses only the target `SchematicBuffer.class`.
+The scanner first checks the minimum ZIP size and local file header magic, then reads the ZIP end record and central directory through Go's `archive/zip` reader. It does not decompress whole archives. For matching jars, it decompresses only the target `SchematicBuffer.class`.
 
 A jar is reported as vulnerable when every constructor in the target `SchematicBuffer.class` has `java.lang.String` as its first parameter. The class parser inspects the method table directly:
 
@@ -89,8 +89,8 @@ If the target class cannot be read or parsed, it is counted as an error rather t
 ## Docker
 
 ```bash
-docker run --rm -v "$PWD:/scan:ro" fallenbreath/litematica-rce-scanner:latest /scan
-docker run --rm -v "$PWD:/scan:ro" ghcr.io/fallen-breath/litematica-rce-scanner:latest /scan
+docker run --rm -t -v "$PWD:/scan:ro" fallenbreath/litematica-rce-scanner:latest
+docker run --rm -t -v "$PWD:/scan:ro" ghcr.io/fallen-breath/litematica-rce-scanner:latest
 ```
 
 The image uses a distroless runtime and runs as root by default, which makes it practical for scanning mounted local files with restrictive ownership or mode bits.

@@ -75,7 +75,7 @@ CSV 只记录检测到的 Litematica/Servux jar。
 - `fi/dy/masa/litematica/schematic/transmit/SchematicBuffer.class`
 - `fi/dy/masa/servux/schematic/transmit/SchematicBuffer.class`
 
-扫描器通过 Go 标准库 `archive/zip` 读取 ZIP 结束记录和中央目录，因此不会解压整个压缩包。命中后，只会解压目标 `SchematicBuffer.class`。
+扫描器会先检查 ZIP 最小大小和 local file header magic，再通过 Go 标准库 `archive/zip` 读取 ZIP 结束记录和中央目录，因此不会解压整个压缩包。命中后，只会解压目标 `SchematicBuffer.class`。
 
 如果目标 `SchematicBuffer.class` 中所有构造函数的首个参数都是 `java.lang.String`，则报告该 jar 存在漏洞。class parser 会直接检查 method table：
 
@@ -89,8 +89,8 @@ CSV 只记录检测到的 Litematica/Servux jar。
 ## Docker
 
 ```bash
-docker run --rm -v "$PWD:/scan:ro" fallenbreath/litematica-rce-scanner:latest /scan
-docker run --rm -v "$PWD:/scan:ro" ghcr.io/fallen-breath/litematica-rce-scanner:latest /scan
+docker run --rm -t -v "$PWD:/scan:ro" fallenbreath/litematica-rce-scanner:latest
+docker run --rm -t -v "$PWD:/scan:ro" ghcr.io/fallen-breath/litematica-rce-scanner:latest
 ```
 
 镜像使用 distroless 运行时，并默认以 root 身份运行，方便扫描宿主机挂载进容器后权限较严格的本地文件。

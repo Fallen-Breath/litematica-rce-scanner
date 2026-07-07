@@ -32,6 +32,10 @@ func inspectZip(path string) ([]scanResult, bool, error) {
 	}
 	defer file.Close()
 
+	if !hasZipLocalFileHeader(file) {
+		return nil, false, nil
+	}
+
 	reader, err := zip.NewReader(file, info.Size())
 	if err != nil {
 		return nil, false, nil
@@ -61,6 +65,14 @@ func inspectZip(path string) ([]scanResult, bool, error) {
 		findings = append(findings, inspectClassEntry(path, entry, modVersion))
 	}
 	return findings, true, nil
+}
+
+func hasZipLocalFileHeader(file *os.File) bool {
+	var header [4]byte
+	if _, err := file.ReadAt(header[:], 0); err != nil {
+		return false
+	}
+	return header == [4]byte{'P', 'K', 0x03, 0x04}
 }
 
 func inspectClassEntry(path string, entry *zip.File, modVersion string) scanResult {
