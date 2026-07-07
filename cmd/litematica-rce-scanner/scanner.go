@@ -15,6 +15,7 @@ type counters struct {
 	validZips      uint64
 	targetJars     uint64
 	targetClasses  uint64
+	safeJars       uint64
 	vulnerableJars uint64
 	errors         uint64
 }
@@ -33,6 +34,7 @@ type scanSummary struct {
 	ValidZips      uint64
 	TargetJars     uint64
 	TargetClasses  uint64
+	SafeJars       uint64
 	VulnerableJars uint64
 	Errors         uint64
 }
@@ -179,6 +181,7 @@ func scanOne(path string, c *counters, opts options, results chan<- scanResult) 
 
 	atomic.AddUint64(&c.targetJars, 1)
 	vulnerableJar := false
+	safeJar := false
 	for _, finding := range findings {
 		atomic.AddUint64(&c.targetClasses, 1)
 		if finding.Error != "" {
@@ -188,11 +191,15 @@ func scanOne(path string, c *counters, opts options, results chan<- scanResult) 
 		}
 		if finding.Vulnerable {
 			vulnerableJar = true
+		} else {
+			safeJar = true
 		}
 		results <- finding
 	}
 	if vulnerableJar {
 		atomic.AddUint64(&c.vulnerableJars, 1)
+	} else if safeJar {
+		atomic.AddUint64(&c.safeJars, 1)
 	}
 }
 
@@ -210,6 +217,7 @@ func snapshotCounters(c *counters) scanSummary {
 		ValidZips:      atomic.LoadUint64(&c.validZips),
 		TargetJars:     atomic.LoadUint64(&c.targetJars),
 		TargetClasses:  atomic.LoadUint64(&c.targetClasses),
+		SafeJars:       atomic.LoadUint64(&c.safeJars),
 		VulnerableJars: atomic.LoadUint64(&c.vulnerableJars),
 		Errors:         atomic.LoadUint64(&c.errors),
 	}

@@ -38,11 +38,11 @@ litematica-rce-scanner [options] [path ...]
 示例：
 
 ```bash
-litematica-rce-scanner .
-litematica-rce-scanner -j 8 /path/to/mods /another/path
-litematica-rce-scanner -non-recursive ./mods
-litematica-rce-scanner ./mods/litematica.jar
-litematica-rce-scanner -csv results.csv -fail-on-vulnerable ./mods
+./litematica-rce-scanner
+./litematica-rce-scanner -j 8 /path/to/mods /another/path
+./litematica-rce-scanner -non-recursive ./mods
+./litematica-rce-scanner ./mods/litematica.jar
+./litematica-rce-scanner -csv results.csv -fail-on-vulnerable ./mods
 ```
 
 Windows 下可以把一个或多个目录拖到 `.exe` 上运行。程序在 Windows 交互式控制台中、且没有显式命令行 flag 时，会在结束后等待回车，避免控制台窗口立刻关闭。可使用 `-no-pause` 关闭该行为。
@@ -62,8 +62,8 @@ Progress: scanned 123 files, elapsed 12.3s, vulnerable 7
 检测到的 Litematica 和 Servux jar 会在扫描过程中实时输出。存在漏洞的 jar 标记为 `[VULNERABLE]`；命中目标 class 但不满足漏洞构造函数规则的 jar 标记为 `[SAFE]`。
 
 ```text
-[VULNERABLE] path/to/file.jar | litematica v1.2.3
-[SAFE] path/to/file.jar | servux
+[VULNERABLE]  path/to/file.jar   litematica v1.2.3
+[SAFE]        path/to/file.jar   servux
 ```
 
 `version` 字段会尽量从 `fabric.mod.json` 中读取。如果 manifest 或版本读取失败，则省略版本字段。

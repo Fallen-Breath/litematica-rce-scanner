@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"os"
+	"strings"
 	"sync"
 	"time"
 )
@@ -80,11 +81,18 @@ func printProgress(summary scanSummary, colors colorizer) {
 }
 
 func printResult(result scanResult, colors colorizer) {
-	label := colors.green("[SAFE]")
+	const labelWidth = len("[VULNERABLE]")
+
+	labelText := "[SAFE]"
 	if result.Vulnerable {
-		label = colors.red("[VULNERABLE]")
+		labelText = "[VULNERABLE]"
 	}
-	line := fmt.Sprintf("%s %s%s%s", label, result.Path, colors.dim(" | "), colors.magenta(result.Mod))
+	label := colors.green(labelText)
+	if result.Vulnerable {
+		label = colors.red(labelText)
+	}
+
+	line := label + strings.Repeat(" ", labelWidth-len(labelText)+2) + result.Path + colors.dim("   ") + colors.magenta(result.Mod)
 	if result.Version != "" {
 		line += " " + colors.cyan("v"+result.Version)
 	}
@@ -112,13 +120,22 @@ func printSummary(summary scanSummary, colors colorizer) {
 	fmt.Fprintf(os.Stdout, "  Valid zip/jar files: %d\n", summary.ValidZips)
 	fmt.Fprintf(os.Stdout, "  Jars with target class: %d\n", summary.TargetJars)
 	fmt.Fprintf(os.Stdout, "  Target classes inspected: %d\n", summary.TargetClasses)
-	fmt.Fprintf(os.Stdout, "  Vulnerable jars: %d\n", summary.VulnerableJars)
+	fmt.Fprintf(os.Stdout, "  Safe jars: %s\n", coloredCount(summary.SafeJars, colors.green))
+	fmt.Fprintf(os.Stdout, "  Vulnerable jars: %s\n", coloredCount(summary.VulnerableJars, colors.red))
 	fmt.Fprintf(os.Stdout, "  Errors: %d\n", summary.Errors)
 	if summary.VulnerableJars == 0 {
 		fmt.Fprintln(os.Stdout, colors.green("No vulnerable jars found."))
 	} else {
 		fmt.Fprintln(os.Stdout, colors.red("Vulnerable jars were found."))
 	}
+}
+
+func coloredCount(value uint64, paint func(string) string) string {
+	text := fmt.Sprint(value)
+	if value == 0 {
+		return text
+	}
+	return paint(text)
 }
 
 func printLine(line string) {

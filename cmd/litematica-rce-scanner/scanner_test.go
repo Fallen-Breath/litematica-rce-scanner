@@ -109,6 +109,30 @@ func TestInspectZipIgnoresJarsWithoutTargetClass(t *testing.T) {
 	}
 }
 
+func TestScanOneCountsSafeAndVulnerableJars(t *testing.T) {
+	safeJar := testJar(t, map[string][]byte{
+		servuxSchematicBuffer: testClassFile("(I)V"),
+	})
+	vulnerableJar := testJar(t, map[string][]byte{
+		litematicaSchematicBuffer: testClassFile("(Ljava/lang/String;)V"),
+	})
+	brokenJar := testJar(t, map[string][]byte{
+		litematicaSchematicBuffer: []byte("not a class"),
+	})
+
+	var c counters
+	results := make(chan scanResult, 3)
+	scanOne(safeJar, &c, options{}, results)
+	scanOne(vulnerableJar, &c, options{}, results)
+	scanOne(brokenJar, &c, options{}, results)
+
+	summary := snapshotCounters(&c)
+	if summary.SafeJars != 1 || summary.VulnerableJars != 1 || summary.TargetJars != 3 || summary.Errors != 1 {
+		t.Fatalf("summary = {safe:%d vulnerable:%d target:%d errors:%d}, want {safe:1 vulnerable:1 target:3 errors:1}",
+			summary.SafeJars, summary.VulnerableJars, summary.TargetJars, summary.Errors)
+	}
+}
+
 func TestWalkRootAcceptsFileRoot(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "one.jar")
 	if err := os.WriteFile(path, []byte("not a jar"), 0644); err != nil {

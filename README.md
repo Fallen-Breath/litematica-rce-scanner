@@ -38,11 +38,11 @@ Use `-warnings` to print per-file warnings such as permission-denied files. Warn
 Examples:
 
 ```bash
-litematica-rce-scanner .
-litematica-rce-scanner -j 8 /path/to/mods /another/path
-litematica-rce-scanner -non-recursive ./mods
-litematica-rce-scanner ./mods/litematica.jar
-litematica-rce-scanner -csv results.csv -fail-on-vulnerable ./mods
+./litematica-rce-scanner
+./litematica-rce-scanner -j 8 /path/to/mods /another/path
+./litematica-rce-scanner -non-recursive ./mods
+./litematica-rce-scanner ./mods/litematica.jar
+./litematica-rce-scanner -csv results.csv -fail-on-vulnerable ./mods
 ```
 
 On Windows, you can drag one or more folders onto the `.exe`. When the program is launched without explicit flags in an interactive Windows console, it waits for Enter before exiting so the result window does not close immediately. Use `-no-pause` to disable this behavior.
@@ -62,8 +62,8 @@ The scanner does not pre-scan the tree or keep every path in memory; it walks an
 Detected Litematica and Servux jars are printed as they are scanned. Vulnerable jars are marked `[VULNERABLE]`; matching jars that do not satisfy the vulnerable constructor rule are marked `[SAFE]`.
 
 ```text
-[VULNERABLE] path/to/file.jar | litematica v1.2.3
-[SAFE] path/to/file.jar | servux
+[VULNERABLE]  path/to/file.jar   litematica v1.2.3
+[SAFE]        path/to/file.jar   servux
 ```
 
 The `version` field is read from `fabric.mod.json` when available. If the manifest or version cannot be read, the version field is omitted.
