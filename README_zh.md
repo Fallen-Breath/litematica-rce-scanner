@@ -14,6 +14,8 @@
 
 ## 使用方法
 
+Windows 环境太长不看版用法：把 `.exe` 放到要扫描的目录里，双击打开即可。
+
 ```bash
 litematica-rce-scanner [options] [path ...]
 ```

@@ -14,6 +14,8 @@ It scans one or more specified paths, identifies Litematica/Servux jars, and fla
 
 ## Usage
 
+Windows TL;DR: put the `.exe` in the directory you want to scan, then double-click it.
+
 ```bash
 litematica-rce-scanner [options] [path ...]
 ```
