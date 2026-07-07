@@ -22,41 +22,53 @@ env:
   IS_RELEASE_TAG: ${{ github.ref_type == 'tag' && startsWith(github.ref_name, 'v') }}
 
 jobs:
-  goreleaser:
+  test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
+          cache: false
 
-      - name: Run GoReleaser snapshot
-        if: ${{ env.IS_RELEASE_TAG != 'true' }}
+      - name: Run tests
+        run: go test ./...
+
+  goreleaser:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: false
+
+      - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v7
         with:
           distribution: goreleaser
           version: "~> v2"
-          args: release --snapshot --clean
+          args: ${{ env.IS_RELEASE_TAG == 'true' && 'release --clean' || 'release --snapshot --clean' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Run GoReleaser release
-        if: ${{ env.IS_RELEASE_TAG == 'true' }}
-        uses: goreleaser/goreleaser-action@v7
+      - name: Upload GoReleaser artifacts
+        uses: actions/upload-artifact@v7
         with:
-          distribution: goreleaser
-          version: "~> v2"
-          args: release --clean
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          name: litematica-rce-scanner-dist-${{ github.run_id }}
+          path: dist/
 
   docker:
     runs-on: ubuntu-latest
+    needs: test
     if: ${{ github.ref == 'refs/heads/master' || (github.ref_type == 'tag' && startsWith(github.ref_name, 'v')) }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Docker meta
         id: meta
