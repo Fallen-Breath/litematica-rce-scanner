@@ -106,25 +106,60 @@ func scanRoots(roots []string, opts options) (scanSummary, error) {
 }
 
 func walkRoot(root string, jobs chan<- string, c *counters, opts options) {
+	if opts.nonRecursive {
+		walkRootNonRecursive(root, jobs, c, opts)
+		return
+	}
+
 	err := filepath.WalkDir(root, func(path string, entry os.DirEntry, walkErr error) error {
 		if walkErr != nil {
 			atomic.AddUint64(&c.errors, 1)
 			printWarning(opts, "cannot read %q: %v", path, walkErr)
 			return nil
 		}
-		if entry.IsDir() {
-			return nil
-		}
-		if entry.Type()&os.ModeType != 0 {
-			return nil
-		}
-		jobs <- path
+		enqueueDirEntry(path, entry, jobs)
 		return nil
 	})
 	if err != nil {
 		atomic.AddUint64(&c.errors, 1)
 		printWarning(opts, "cannot walk %q: %v", root, err)
 	}
+}
+
+func walkRootNonRecursive(root string, jobs chan<- string, c *counters, opts options) {
+	info, err := os.Stat(root)
+	if err != nil {
+		atomic.AddUint64(&c.errors, 1)
+		printWarning(opts, "cannot access %q: %v", root, err)
+		return
+	}
+	if info.Mode().IsRegular() {
+		jobs <- root
+		return
+	}
+	if !info.IsDir() {
+		return
+	}
+
+	entries, err := os.ReadDir(root)
+	if err != nil {
+		atomic.AddUint64(&c.errors, 1)
+		printWarning(opts, "cannot read %q: %v", root, err)
+		return
+	}
+	for _, entry := range entries {
+		enqueueDirEntry(filepath.Join(root, entry.Name()), entry, jobs)
+	}
+}
+
+func enqueueDirEntry(path string, entry os.DirEntry, jobs chan<- string) {
+	if entry.IsDir() {
+		return
+	}
+	if entry.Type()&os.ModeType != 0 {
+		return
+	}
+	jobs <- path
 }
 
 func scanOne(path string, c *counters, opts options, results chan<- scanResult) {

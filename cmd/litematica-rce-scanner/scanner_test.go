@@ -109,6 +109,55 @@ func TestInspectZipIgnoresJarsWithoutTargetClass(t *testing.T) {
 	}
 }
 
+func TestWalkRootAcceptsFileRoot(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "one.jar")
+	if err := os.WriteFile(path, []byte("not a jar"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	jobs := make(chan string, 1)
+	var c counters
+	walkRoot(path, jobs, &c, options{})
+	close(jobs)
+
+	if got := collectJobs(jobs); len(got) != 1 || got[0] != path {
+		t.Fatalf("walked jobs = %v, want [%s]", got, path)
+	}
+}
+
+func TestWalkRootNonRecursiveSkipsNestedFiles(t *testing.T) {
+	dir := t.TempDir()
+	top := filepath.Join(dir, "top.jar")
+	nestedDir := filepath.Join(dir, "nested")
+	nested := filepath.Join(nestedDir, "nested.jar")
+	if err := os.WriteFile(top, []byte("top"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Mkdir(nestedDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(nested, []byte("nested"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	jobs := make(chan string, 2)
+	var c counters
+	walkRoot(dir, jobs, &c, options{nonRecursive: true})
+	close(jobs)
+
+	if got := collectJobs(jobs); len(got) != 1 || got[0] != top {
+		t.Fatalf("walked jobs = %v, want [%s]", got, top)
+	}
+}
+
+func collectJobs(jobs <-chan string) []string {
+	var paths []string
+	for path := range jobs {
+		paths = append(paths, path)
+	}
+	return paths
+}
+
 func testJar(t *testing.T, entries map[string][]byte) string {
 	t.Helper()
 

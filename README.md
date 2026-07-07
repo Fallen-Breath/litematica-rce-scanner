@@ -22,11 +22,13 @@ Common options:
 -color value             color output: auto, always, never (default auto)
 -progress                print periodic progress to stdout (default true)
 -warnings                print per-file warnings for scan failures (default false)
+-non-recursive           scan only immediate files under each directory
 -fail-on-vulnerable      exit with code 1 when vulnerable jars are found
 -version                 print version and exit
 ```
 
 Use `-progress=false` to disable progress output.
+Use `-non-recursive` to scan only files directly inside each requested directory. File paths passed as arguments are scanned directly.
 Use `-warnings` to print per-file warnings such as permission-denied files. Warnings are still counted in the summary when this flag is not set.
 
 Examples:
@@ -34,6 +36,8 @@ Examples:
 ```bash
 litematica-rce-scanner .
 litematica-rce-scanner -j 8 /path/to/mods /another/path
+litematica-rce-scanner -non-recursive ./mods
+litematica-rce-scanner ./mods/litematica.jar
 litematica-rce-scanner -csv results.csv -fail-on-vulnerable ./mods
 ```
 
@@ -70,7 +74,7 @@ Only detected Litematica/Servux jars are written to the CSV.
 
 ## Detection Details
 
-The scanner recursively walks all regular files under the requested paths. It does not rely on file extensions.
+The scanner walks regular files under the requested paths. Directory scanning is recursive by default; with `-non-recursive`, only immediate files under each requested directory are scanned. It does not rely on file extensions.
 
 A file is treated as a candidate only when it is a valid ZIP/JAR and the ZIP central directory contains one of these exact class entries:
 
@@ -89,6 +93,10 @@ A jar is reported as vulnerable when every constructor in the target `SchematicB
 If the target class cannot be read or parsed, it is counted as an error rather than vulnerable. Use `-warnings` to print per-file details.
 
 ## Docker
+
+The scanner can also be run as a container. Images are available on Docker Hub and GHCR.
+
+The commands below will scan all files under the current directory recursively with single-threaded scanning using default options:
 
 ```bash
 docker run --rm -t -v "$PWD:/scan:ro" fallenbreath/litematica-rce-scanner:latest

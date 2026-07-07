@@ -22,11 +22,13 @@ litematica-rce-scanner [options] [path ...]
 -color value             颜色输出：auto、always、never，默认 auto
 -progress                向 stdout 定期输出进度，默认 true
 -warnings                输出逐文件扫描发生失败时的 warning，默认 false
+-non-recursive           只扫描每个目录下的直接文件，不递归进入子目录
 -fail-on-vulnerable      找到存在漏洞的 jar 时以退出码 1 退出
 -version                 输出版本号并退出
 ```
 
 使用 `-progress=false` 可以关闭进度输出。
+使用 `-non-recursive` 可以只扫描每个目标目录下的直接文件。位置参数如果是文件路径，会直接扫描该文件。
 使用 `-warnings` 可以输出 permission denied 等逐文件 warning。未设置该参数时，warning 不逐条输出，但仍会计入 summary。
 
 示例：
@@ -34,6 +36,8 @@ litematica-rce-scanner [options] [path ...]
 ```bash
 litematica-rce-scanner .
 litematica-rce-scanner -j 8 /path/to/mods /another/path
+litematica-rce-scanner -non-recursive ./mods
+litematica-rce-scanner ./mods/litematica.jar
 litematica-rce-scanner -csv results.csv -fail-on-vulnerable ./mods
 ```
 
@@ -70,7 +74,7 @@ CSV 只记录检测到的 Litematica/Servux jar。
 
 ## 检测方式
 
-扫描器会递归遍历指定路径下的所有普通文件，不依赖文件扩展名。
+扫描器会遍历指定路径下的普通文件。默认会递归扫描目录；使用 `-non-recursive` 时，只扫描每个目标目录下的直接文件。扫描不依赖文件扩展名。
 
 只有当文件是合法 ZIP/JAR，并且 ZIP 中央目录包含以下任一精确 class 路径时，才会作为候选 jar 继续检查：
 
@@ -89,6 +93,10 @@ CSV 只记录检测到的 Litematica/Servux jar。
 如果目标 class 无法读取或解析，会计入错误数量，而不会报告为存在漏洞。使用 `-warnings` 可以输出逐文件详情。
 
 ## Docker
+
+该扫描器也可以以容器形式执行。镜像在 Docker Hub 和 GHCR 均可用。
+
+下面的命令会用默认参数，单线程递归扫描当前路径下的全部文件：
 
 ```bash
 docker run --rm -t -v "$PWD:/scan:ro" fallenbreath/litematica-rce-scanner:latest

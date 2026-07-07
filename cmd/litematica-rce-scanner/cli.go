@@ -17,6 +17,7 @@ type options struct {
 	colorEnabled     bool
 	progress         bool
 	warnings         bool
+	nonRecursive     bool
 	pause            bool
 	noPause          bool
 	failOnVulnerable bool
@@ -67,13 +68,14 @@ func parseOptions(args []string) (options, []string, error) {
 	fs.StringVar(&opts.colorMode, "color", opts.colorMode, "color output: auto, always, never")
 	fs.BoolVar(&opts.progress, "progress", opts.progress, "print periodic progress to stdout")
 	fs.BoolVar(&opts.warnings, "warnings", false, "print per-file warnings for scan failures")
+	fs.BoolVar(&opts.nonRecursive, "non-recursive", false, "scan only immediate files under each directory")
 	fs.BoolVar(&opts.pause, "pause", false, "wait for Enter before exiting")
 	fs.BoolVar(&opts.noPause, "no-pause", false, "disable automatic Windows pause")
 	fs.BoolVar(&opts.failOnVulnerable, "fail-on-vulnerable", false, "exit with code 1 when vulnerable jars are found")
 	fs.BoolVar(&opts.showVersion, "version", false, "print version and exit")
 	fs.Usage = func() {
 		fmt.Fprintf(fs.Output(), "Usage: %s [options] [path ...]\n\n", fs.Name())
-		fmt.Fprintln(fs.Output(), "Recursively scan regular files under each path. Paths default to the current directory.")
+		fmt.Fprintln(fs.Output(), "Scan regular files under each path. Directory scanning is recursive unless -non-recursive is set.")
 		fmt.Fprintln(fs.Output(), "\nOptions:")
 		fs.PrintDefaults()
 	}
