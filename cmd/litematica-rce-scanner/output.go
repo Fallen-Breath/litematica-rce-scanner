@@ -127,6 +127,10 @@ func printSummary(summary scanSummary, colors colorizer) {
 		fmt.Fprintln(os.Stdout, colors.green("No vulnerable jars found."))
 	} else {
 		fmt.Fprintln(os.Stdout, colors.red("Vulnerable jars were found."))
+		fmt.Fprintln(os.Stdout, "")
+		fmt.Fprintln(os.Stdout, "Please update the affected mods as soon as possible to avoid being impacted.")
+		fmt.Fprintf(os.Stdout, "  Litematica: %s\n", colors.link("https://modrinth.com/mod/litematica/versions"))
+		fmt.Fprintf(os.Stdout, "  Servux: %s\n", colors.link("https://modrinth.com/mod/servux/versions"))
 	}
 }
 
@@ -182,6 +186,10 @@ func (c colorizer) magenta(text string) string {
 
 func (c colorizer) green(text string) string {
 	return c.paint("32;1", text)
+}
+
+func (c colorizer) link(text string) string {
+	return c.paint("34;4", text)
 }
 
 func (c colorizer) dim(text string) string {

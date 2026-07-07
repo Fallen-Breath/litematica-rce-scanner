@@ -44,6 +44,7 @@ Examples:
 ./litematica-rce-scanner -j 8 /path/to/mods /another/path
 ./litematica-rce-scanner -non-recursive ./mods
 ./litematica-rce-scanner ./mods/litematica.jar
+./litematica-rce-scanner -warnings /
 ./litematica-rce-scanner -csv results.csv -fail-on-vulnerable ./mods
 ```
 
@@ -52,6 +53,8 @@ On Windows, you can drag one or more folders onto the `.exe` file to launch it. 
 ## Output
 
 Terminal output is in English. ANSI color is enabled by default in interactive terminals, including modern Windows terminals.
+
+At startup, the scanner prints the number of scan roots and the configured concurrency. Before each root is traversed, it also prints the root path being scanned.
 
 During scanning, progress is printed to stdout every 5 seconds, with the first update appearing approximately 5 seconds after startup. A final progress line is shown after scanning completes:
 
@@ -69,6 +72,8 @@ Detected Litematica and Servux jars are reported in real time as they are scanne
 ```
 
 The `version` field is extracted from `fabric.mod.json` when available. If the manifest or version information cannot be read, the field is omitted.
+
+If vulnerable jars are found, the final summary asks you to update the affected mods as soon as possible and prints Modrinth version pages for Litematica and Servux.
 
 When CSV output is enabled, the file contains the following columns:
 

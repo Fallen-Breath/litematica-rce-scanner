@@ -88,6 +88,7 @@ func scanRoots(roots []string, opts options) (scanSummary, error) {
 	}
 
 	for _, root := range validRoots {
+		printLine(colors.dim("Scanning root: ") + root)
 		walkRoot(root, jobs, &c, opts)
 	}
 	close(jobs)

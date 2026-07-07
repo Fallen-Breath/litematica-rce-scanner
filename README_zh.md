@@ -44,6 +44,7 @@ litematica-rce-scanner [options] [path ...]
 ./litematica-rce-scanner -j 8 /path/to/mods /another/path
 ./litematica-rce-scanner -non-recursive ./mods
 ./litematica-rce-scanner ./mods/litematica.jar
+./litematica-rce-scanner -warnings /
 ./litematica-rce-scanner -csv results.csv -fail-on-vulnerable ./mods
 ```
 
@@ -52,6 +53,8 @@ litematica-rce-scanner [options] [path ...]
 ## 输出说明
 
 命令行输出内容为英文。在交互式终端中默认启用 ANSI 颜色，现代 Windows 终端同样支持。
+
+启动时，扫描器会输出扫描 root 的数量与并发度。开始遍历每个 root 之前，也会输出当前正在扫描的 root 路径。
 
 扫描期间，程序会每隔 5 秒向 stdout 输出一次进度，首次进度显示大约在扫描启动 5 秒后出现。扫描完成后，还会再输出一次最终进度信息：
 
@@ -69,6 +72,8 @@ Progress: scanned 123 files, elapsed 12.3s, vulnerable 7
 ```
 
 `version` 字段会优先从 `fabric.mod.json` 中读取。若 manifest 或版本信息读取失败，则该字段会被省略。
+
+如果发现存在漏洞的 jar，最终 summary 会提示尽快更新受影响的 mod，并输出 Litematica 与 Servux 的 Modrinth 版本页面。
 
 启用 CSV 输出时，生成的文件将包含以下列：
 
