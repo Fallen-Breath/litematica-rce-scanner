@@ -37,10 +37,11 @@ func run(args []string) (int, bool) {
 	}
 	opts.colorEnabled = shouldUseColor(opts.colorMode, os.Stdout)
 	if opts.showVersion {
-		fmt.Printf("litematica-rce-scanner %s\n", version)
+		printVersionBanner()
 		return 0, pause
 	}
 
+	printShortBanner()
 	summary, err := scanRoots(roots, opts)
 	if err != nil {
 		fmt.Fprintf(os.Stdout, "Error: %v\n", err)

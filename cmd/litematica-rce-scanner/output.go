@@ -52,6 +52,15 @@ func consumeResults(results <-chan scanResult, writer *csv.Writer, colors colori
 	done <- firstErr
 }
 
+func printShortBanner() {
+	printLine(fmt.Sprintf("%s v%s", appName, version))
+}
+
+func printVersionBanner() {
+	printLine(fmt.Sprintf("%s v%s, licensed under %s", appName, version, license))
+	printLine(fmt.Sprintf("Project URL: %s", projectURL))
+}
+
 func reportProgress(c *counters, colors colorizer, stop <-chan struct{}, done chan<- struct{}) {
 	ticker := time.NewTicker(progressInterval)
 	defer ticker.Stop()
