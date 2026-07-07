@@ -1,5 +1,7 @@
 # litematica-rce-scanner
 
+English | [中文](README_zh.md)
+
 A small command-line scanner for detecting vulnerable Litematica and Servux jar files.
 
 It scans one or more paths, reports detected Litematica/Servux jars, and marks vulnerable versions so they can be removed or upgraded.
