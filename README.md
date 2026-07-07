@@ -10,6 +10,8 @@ A small command-line scanner for detecting vulnerable [Litematica](https://githu
 
 It scans one or more paths, reports detected Litematica/Servux jars, and marks vulnerable versions so they can be removed or upgraded.
 
+![snapshot](snapshot.png)
+
 ## Usage
 
 ```bash
